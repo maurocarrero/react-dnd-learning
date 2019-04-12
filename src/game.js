@@ -1,9 +1,3 @@
-// export function observe(receive) {
-//   setInterval(() => {
-//     return receive([Math.floor(Math.random() * 8), Math.floor(Math.random() * 8)]);
-//   }, 1000);
-// };
-
 let knightPosition = [1, 7];
 let observer = null;
 
@@ -15,10 +9,11 @@ export function canMoveKnight(toX, toY) {
   const [x, y] = knightPosition;
   const dx = toX - x;
   const dy = toY - y;
-  return (
-    Math.abs(dx) === 2 && Math.abs(dy) === 1 || 
-    Math.abs(dx) === 1 && Math.abs(dy) === 2
-  );
+
+  const dx2dy1 = Math.abs(dx) === 2 && Math.abs(dy) === 1;
+  const dx1dy2 = Math.abs(dx) === 1 && Math.abs(dy) === 2;
+
+  return dx2dy1 || dx1dy2;
 }
 
 export function observe(o) {

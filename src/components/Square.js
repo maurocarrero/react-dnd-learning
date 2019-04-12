@@ -10,7 +10,8 @@ export default function Square({ black, children }) {
         backgroundColor: fill,
         color: stroke,
         width: '100%',
-        height: '100%'
+        height: '100%',
+        textAlign: 'center'
       }}>
       {children}
     </div>

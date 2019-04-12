@@ -1,7 +1,14 @@
-import React from 'react'
-import Square from './Square'
-import Knight from './Knight'
+import React from 'react';
+import Square from './Square';
+import Knight from './Knight';
 import { moveKnight } from '../game';
+
+/**
+ * SET UP CONTEXT and PLUG IN HTML5 BACKEND
+ */
+import { DragDropContextProvider } from 'react-dnd';
+import HTML5Backend from 'react-dnd-html5-backend';
+/****************************************************/
 
 const BOARD_SIDE = 600;
 
@@ -23,7 +30,7 @@ function renderSquare(i, [knightX, knightY]) {
       <Square black={black}>{piece}</Square>
     </div>
   )
-}
+};
 
 export default function Board({ knightPosition }) {
   const squares = [];
@@ -31,16 +38,23 @@ export default function Board({ knightPosition }) {
     squares.push(renderSquare(i, knightPosition));
   }
 
+  /**
+   * WRAP COMPONENT ROOT WITH CONTEXT PROVIDER
+   */
   return (
-    <div
-      style={{
-        border: '2px solid #343434',
-        width: `${BOARD_SIDE}px`,
-        height: `${BOARD_SIDE}px`,
-        display: 'flex',
-        flexWrap: 'wrap'
-      }}>
-      {squares}
-    </div>
+    <DragDropContextProvider
+      backend={HTML5Backend}
+    >
+      <div
+        style={{
+          border: '2px solid #343434',
+          width: `${BOARD_SIDE}px`,
+          height: `${BOARD_SIDE}px`,
+          display: 'flex',
+          flexWrap: 'wrap'
+        }}>
+        {squares}
+      </div>
+    </DragDropContextProvider>
   )
-}
+};
