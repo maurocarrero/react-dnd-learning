@@ -6,7 +6,9 @@ const ItemDragSource = ({ children, connectDragSource }) =>
   connectDragSource(<li>{children}</li>);
 
 const sourceSpec = {
-  beginDrag: () => ({})
+  beginDrag: props => ({
+    name: props.children // The item is returned when beginDrag in Source
+  })
 };
 
 const sourceCollectFn = connect => ({
