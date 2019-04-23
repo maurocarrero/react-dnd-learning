@@ -1,4 +1,5 @@
-# React-dnd
+# Learning react-dnd
+This is a repository for learning **react-dnd**, just summarizing main concepts from my personal perspective. Everything here is explained more thouroughly into its [documentation](http://react-dnd.github.io/react-dnd/docs/overview).
 
 - [react-dnd](http://react-dnd.github.io/react-dnd)
 - [touch backend](https://github.com/yahoo/react-dnd-touch-backend)
