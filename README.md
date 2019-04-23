@@ -1,68 +1,142 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# React-dnd
 
-## Available Scripts
+- [react-dnd](http://react-dnd.github.io/react-dnd)
+- [touch backend](https://github.com/yahoo/react-dnd-touch-backend)
 
-In the project directory, you can run:
+## Backends
 
-### `npm start`
+- Built over a **pluggable implementation of [HTML Drag and Drop API](https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API)**
+  - It screenshots the dragged DOM node and uses it as a "drag preview" out of the box (no drawing needed).
+  - Only way to handle _file drop events_.
+  - Does not work on touch devices.
+  - Less customizations opportunities on IE regarding other browsers.
+- Different API implementations can be provided as **Backends** to handle touch events, mouse events, etc.
+- They abstract away the browser differences and process native DOM events. (similar to React's synthetic events).
+- They translate DOM events into the _internal Redux actions_ that react DnD can process.
 
-Runs the app in the development mode.<br>
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+## Items and Types
 
-The page will reload if you make edits.<br>
-You will also see any lint errors in the console.
+- Data is the source of truth.
+- The dragged element is an **item** of certan **type** (data).
+- **Item**: POJO describing what's being dragged.
+  - Describing the dragged data as a plain object helps us to _keep components decoupled_.
+- **Type**: string or symbol identifying a whole class of items (enumeration like Redux action types).
+  - Lets you specify which _drag sources_ and _drop targets_ are **compatible**.
 
-### `npm test`
+## Monitors
 
-Launches the test runner in the interactive watch mode.<br>
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- DnD is inherently **stateful**.
+- The state is _exposed_ to the components using **monitors** (tiny wrappers over the internal state storage).
+- For each component that needs to _track the DnD state_, we can define a **collecting function**.
+- **Monitors** allow to update the props of the components in response to the DnD state changes. The collecting function will be timely called merging the return value into the components props.
 
-### `npm run build`
+## Connectors
 
-Builds the app for production to the `build` folder.<br>
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- Backends handle DOM events, but we code React Components, connectors help us link them by _assigning one of the **predefined roles**_ to the DOM nodes:
+  - **Drag source**: the element to be dragged.
+  - **Drag preview**: the element while is being dragged.
+  - **Drop target**: the element where we can drop draggable elements.
+- First argument of the collecting function.
 
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
+## Drag sources and Drop targets
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+They really tie the _types_, the _items_, the _side effects_, and the _collecting functions_ together with your components.
 
-### `npm run eject`
+### DragSource
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+- A component expected to be draggable must be wrapped in a DragSource.
+- Every DragSource is **registered to a certain type**.
+- It has to **implement a method producing an item** from the component's props.
+- It lets you specify the **collecting function** for the given component.
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### DropTarget
 
-Instead, it will copy all the configuration files and the transitive dependencies (Webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+- Very similar to a drag source with the difference in that one target can be registered to **multiple item types**.
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+## Adding Drag and Drop Interaction
 
-## Learn More
+### 1. Setting up DnD Context and plugging in the backend (_DragDropContextProvider_).
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```js
+import { DragDropContextProvider } from 'react-dnd'
+import HTML5Backend from 'react-dnd-html5-backend'
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+...
+  render()
+    return (
+      <DragDropContextProvider backend={html5Backend}>
+        ...
+      </DragDropContextProvider>
+    )
+  }
+...
+```
 
-### Code Splitting
+### 2. Define Drag Types:
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/code-splitting
+```js
+export const ItemTypes = {
+  KNIGHT: 'knight'
+};
+```
 
-### Analyzing the Bundle Size
+### 3. Define a Drag Source.
+Make elements draggable.
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size
+**DragSource** HoC:
+- 3 parameters: *type*, *spec* and *collect*.
 
-### Making a Progressive Web App
+```js
+const sourceSpec = {
+  beginDrag(props) {
+    return {}
+  }
+};
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app
+const collectFn = (connect, monitor) => {
+  return {};
+};
 
-### Advanced Configuration
+DragSource('ITEM_TYPE', sourceSpec, collectFn)(Component)
+```
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/advanced-configuration
+### 4. Define a Drop Target
 
-### Deployment
+**DropTarget** HoC:
+- 3 parameters: *type*, *spec* and *collect*.
+- Call `connect.dropTarget` function to obtain a wrapper for the Target node.
+- Monitor provides `canDrop` and `isOver` to interact with target.
+- Spec: `drop` and `canDrop` functions.
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/deployment
+```js
+const targetSpec = {
+  drop(props, monitor) {
+    const item = monitor.getItem();
+    doSomething(item, props.x, props.y);
+  }
+  canDrop(props) {
+    return true; // Can the Item be dropped here.
+  }
+};
 
-### `npm run build` fails to minify
+const collectFn = (connect, monitor) => ({
+  connectDropTarget: connect.dropTarget() // Function to connect the node
+  isOver: monitor.isOver(),  // Item is being dragged over the target?
+  canDrop: monitor.canDrop(), // If can be dropped let's render something for it.
+});
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify
+DropTarget('ITEM_TYPE', targetSpec, collectFn)(Component)
+```
+
+### 5. Connect Drag Preview Image
+
+- Connect **Preview** to the **DragSource**.
+- Call `connect.dragPreview` function to obtain a wrapper for the preview node.
+
+```js
+const collectFn = (connect, monitor) => ({
+  connectDragPreview: connect.dragPreview(),
+});
+
+DragSource('ITEM_TYPE', targetSpec, collectFn)(Component)
+```
