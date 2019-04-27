@@ -1,16 +1,11 @@
 import React from 'react';
 
-import ItemDragSource from './ItemDragSource';
-import ItemDropTarget from './ItemDropTarget';
-
 const App = () => (
   <main>
     <section>
-      <ItemDropTarget />
+      <div><span>Drop an item here</span></div>
       <ul>
-        <ItemDragSource>Item 1</ItemDragSource>
-        <ItemDragSource>Item 2</ItemDragSource>
-        <ItemDragSource>Item 3</ItemDragSource>
+        <li>Item 1</li>
       </ul>
     </section>
   </main>
